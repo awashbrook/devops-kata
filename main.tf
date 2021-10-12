@@ -72,7 +72,7 @@ resource "aws_cloudwatch_log_group" "app" {
 }
 
 resource "aws_iam_role" "lambda_exec" {
-  name = "serverless_lambda"
+  name = "serverless"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
