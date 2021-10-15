@@ -21,9 +21,9 @@ terraform {
 provider "aws" {
   region = var.aws_region
 }
-
+# TODO change prefix to devops-kata
 resource "random_pet" "lambda_bucket_name" {
-  prefix = "learn-terraform-functions"
+  prefix = "devops-kata-functions"
   length = 4
 }
 
@@ -97,16 +97,4 @@ resource "aws_iam_role" "lambda_exec" {
 resource "aws_iam_role_policy_attachment" "lambda_policy" {
   role       = aws_iam_role.lambda_exec.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name           = "DevOps-Kata"
-  hash_key       = "COUNTER"
-  billing_mode = "PAY_PER_REQUEST"
-
-  attribute {
-    name = "COUNTER"
-    type = "S"
-  }
-
 }
