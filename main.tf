@@ -13,15 +13,12 @@ terraform {
       version = "~> 2.2.0"
     }
   }
-
-
   required_version = "~> 1.0"
 }
 
 provider "aws" {
   region = var.aws_region
 }
-# TODO change prefix to devops-kata
 resource "random_pet" "lambda_bucket_name" {
   prefix = "devops-kata-functions"
   length = 4
@@ -50,7 +47,6 @@ resource "aws_s3_bucket_object" "lambda_app" {
   etag = filemd5(data.archive_file.lambda_app.output_path)
 }
 
-
 resource "aws_lambda_function" "app" {
   function_name = "getCountOfSold"
 
@@ -68,6 +64,17 @@ resource "aws_lambda_function" "app" {
     variables = {
       DYNAMODB_TABLE = "DevOps-Kata"
     }
+  }
+}
+
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name         = "DevOps-Kata"
+  hash_key     = "COUNTER"
+  billing_mode = "PAY_PER_REQUEST"
+
+  attribute {
+    name = "COUNTER"
+    type = "S"
   }
 }
 
@@ -97,4 +104,46 @@ resource "aws_iam_role" "lambda_exec" {
 resource "aws_iam_role_policy_attachment" "lambda_policy" {
   role       = aws_iam_role.lambda_exec.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy" "dynamodb-table-role-policy" {
+  name   = "dynamodb-table-role-policy"
+  role   = aws_iam_role.lambda_exec.name
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+        "Statement" : [
+      {
+        "Sid" : "ListAndDescribe",
+        "Effect" : "Allow",
+        "Action" : [
+          "dynamodb:List*",
+          "dynamodb:DescribeReservedCapacity*",
+          "dynamodb:DescribeLimits",
+          "dynamodb:DescribeTimeToLive"
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "SpecificTable",
+        "Effect" : "Allow",
+        "Action" : [
+          "dynamodb:BatchGet*",
+          "dynamodb:DescribeStream",
+          "dynamodb:DescribeTable",
+          "dynamodb:Get*",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:BatchWrite*",
+          "dynamodb:CreateTable",
+          "dynamodb:Delete*",
+          "dynamodb:Update*",
+          "dynamodb:PutItem"
+        ],
+        "Resource" : "arn:aws:dynamodb:*:*:table/DevOps-Kata"
+      }
+    ]
+
+}
+EOF
 }
